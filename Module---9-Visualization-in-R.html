@@ -1,0 +1,59 @@
+<h1 id="module-9-visualization-in-r">Module # 9 Visualization in R</h1>
+<p>For this assignment, I have chosen to use my own data obtained from my job as a restaurant delivery driver. The dataset contains a total of observations and the variables I chose to record are:</p>
+<p>Date | Address | Order Amount | Tip Amount | Age | Time | Tip Included | Dog Owner</p>
+<pre class="sourceCode r"><code class="sourceCode r">df =<span class="st"> </span><span class="kw">read.csv</span>(<span class="st">&quot;C:/Users/adamw/Documents/Data Textmining/Delivery Data/Delivery Data - Sheet1 (1).csv&quot;</span>)</code></pre>
+<p>For the first visualization I plotted all of my orders on a map and filled them in by tip percentage of total order.</p>
+<pre class="sourceCode r"><code class="sourceCode r">df$Address =<span class="st"> </span><span class="kw">as.character</span>(df$Address)
+<span class="kw">register_google</span>(<span class="dt">key =</span> <span class="st">&quot;AIzaSyDLHeQB3O4nhAMtQJLRVKpGohvk5FPB3dg&quot;</span>)
+df$latlon =<span class="st"> </span><span class="kw">geocode</span>(df$Address)
+df$TipPercentage =<span class="st"> </span>df$TipAmt/df$OrderAmt
+df$Gender =<span class="st"> </span><span class="kw">as.factor</span>(df$Gender)
+
+dfdog =<span class="st"> </span><span class="kw">subset</span>(df, Dog ==<span class="st"> &quot;Yes&quot;</span>)
+dfnodog =<span class="st"> </span><span class="kw">subset</span>(df, Dog ==<span class="st"> &quot;No&quot;</span>)
+
+dfmale =<span class="st"> </span><span class="kw">subset</span>(df, Gender ==<span class="st"> &quot;Male&quot;</span>)
+dffemale =<span class="st"> </span><span class="kw">subset</span>(df, Gender ==<span class="st"> &quot;Female&quot;</span>)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">tampa.map &lt;-<span class="st"> </span><span class="kw">get_map</span>(<span class="kw">c</span>(-<span class="fl">82.49261</span>, <span class="fl">27.91484</span>), <span class="dt">zoom =</span> <span class="dv">12</span>, <span class="dt">maptype =</span> <span class="st">&quot;terrain&quot;</span>)
+
+mapSimple &lt;-<span class="st"> </span><span class="kw">ggmap</span>(tampa.map)
+
+df =<span class="st"> </span><span class="kw">subset</span>(df, df$TipPercentage &lt;=<span class="st"> </span><span class="fl">0.35</span>)
+
+mapSimple +<span class="st"> </span><span class="kw">geom_point</span>(<span class="dt">data =</span> df, <span class="kw">aes</span>(<span class="dt">x =</span> latlon$lon, <span class="dt">y =</span> latlon$lat, 
+    <span class="dt">color =</span> TipPercentage, ), <span class="dt">size =</span> <span class="dv">3</span>, <span class="dt">alpha =</span> <span class="dv">6</span>/<span class="dv">10</span>) +<span class="st"> </span><span class="kw">scale_color_gradient</span>(<span class="dt">low =</span> <span class="st">&quot;blue&quot;</span>, 
+    <span class="dt">high =</span> <span class="st">&quot;red&quot;</span>, <span class="dt">limits =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="fl">0.35</span>)) +<span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Tampa Delivery Map&quot;</span>)</code></pre>
+<div class="figure">
+<img src="Module---9-Visualization-in-R_files/figure-markdown_github/unnamed-chunk-3-1.png" />
+</div>
+<p>The second visualization is a scatterplot of the same variables, however this one is colored by gender.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(df, <span class="kw">aes</span>(df$OrderAmt, df$TipPercentage, <span class="dt">color =</span> df$Gender)) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_jitter</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">&quot;Order Amount&quot;</span>) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">&quot;Tip Percentage&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">labs</span>(<span class="dt">color =</span> <span class="st">&quot;Gender&quot;</span>) +<span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Percentage of Tip Based on Total Order&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">geom_smooth</span>(<span class="dt">method =</span> <span class="st">&quot;lm&quot;</span>)</code></pre>
+<div class="figure">
+<img src="Module---9-Visualization-in-R_files/figure-markdown_github/unnamed-chunk-4-1.png" />
+</div>
+<p>The last visualization plots the number of orders placed throughout the evening.</p>
+<pre class="sourceCode r"><code class="sourceCode r">f =<span class="st"> </span><span class="kw">subset</span>(df, df$TipPercentage &lt;<span class="st"> </span><span class="fl">0.35</span>)
+df$Time =<span class="st"> </span><span class="kw">as.POSIXct</span>(df$Time, <span class="dt">format =</span> <span class="st">&quot;%H:%M:%S&quot;</span>)
+
+dfdog =<span class="st"> </span><span class="kw">subset</span>(df, Dog ==<span class="st"> &quot;Yes&quot;</span>)
+dfnodog =<span class="st"> </span><span class="kw">subset</span>(df, Dog ==<span class="st"> &quot;No&quot;</span>)
+dfdog$Time =<span class="st"> </span><span class="kw">as.POSIXct</span>(dfdog$Time, <span class="dt">format =</span> <span class="st">&quot;%H:%M:%S&quot;</span>)
+dfnodog$Time =<span class="st"> </span><span class="kw">as.POSIXct</span>(dfnodog$Time, <span class="dt">format =</span> <span class="st">&quot;%H:%M:%S&quot;</span>)
+
+dfmale$Time =<span class="st"> </span><span class="kw">as.POSIXct</span>(dfmale$Time, <span class="dt">format =</span> <span class="st">&quot;%H:%M:%S&quot;</span>)
+dffemale$Time =<span class="st"> </span><span class="kw">as.POSIXct</span>(dffemale$Time, <span class="dt">format =</span> <span class="st">&quot;%H:%M:%S&quot;</span>)
+
+<span class="co"># df$Time = as.Date(df$Time) df$Time =</span>
+<span class="co"># format(as.POSIXct(df$Time,format=&#39;%m/%d/%Y</span>
+<span class="co"># %H:%M:%S&#39;),format=&#39;%H:%M&#39;)</span>
+
+<span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dt">x =</span> Time, <span class="dt">fill =</span> Gender)) +<span class="st"> </span><span class="kw">geom_bar</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">size =</span> <span class="dv">12</span>, 
+    <span class="dt">angle =</span> <span class="dv">80</span>)) +<span class="st"> </span><span class="kw">scale_x_datetime</span>(<span class="dt">date_breaks =</span> <span class="st">&quot;30 min&quot;</span>, <span class="dt">date_labels =</span> <span class="st">&quot;%H:%M&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">ylab</span>(<span class="st">&quot;Number of Orders&quot;</span>) +<span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Number of Orders Based on Time of Day&quot;</span>) +<span class="st"> </span>
+<span class="st">    </span><span class="kw">xlab</span>(<span class="st">&quot;Time (PM)&quot;</span>)</code></pre>
+<div class="figure">
+<img src="Module---9-Visualization-in-R_files/figure-markdown_github/unnamed-chunk-5-1.png" />
+</div>
